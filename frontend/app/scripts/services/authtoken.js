@@ -1,12 +1,5 @@
 'use strict';
 
-/**
- * @ngdoc service
- * @name psJwtApp.authToken
- * @description
- * # authToken
- * Factory in the psJwtApp.
- */
 angular.module('psJwtApp').factory('authToken', function($window) {
     var storage = $window.localStorage;
     var cachedToken;
@@ -24,8 +17,8 @@ angular.module('psJwtApp').factory('authToken', function($window) {
             
             return cachedToken;
         },
-        isAuthenticated:function(){
-            return !!this.getToken();
+        isAuthenticated: function(){
+            return !!authToken.getToken();
         },
         removeToken: function(){
             cachedToken = null;

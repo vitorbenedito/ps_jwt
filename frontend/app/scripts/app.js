@@ -8,4 +8,4 @@
  *
  * Main module of the application.
  */
-angular.module('psJwtApp', ['ui.router']);
+angular.module('psJwtApp', ['ui.router','ngAnimate']);
