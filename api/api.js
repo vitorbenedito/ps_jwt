@@ -34,14 +34,15 @@ app.get('/jobs', function(req,res){
     var token = req.headers.authorization.split(' ')[1];  
     
     var payload = jwt.decode(token,'shhh..');
-
-    if(payload.sub){
+    
+    if(!payload.sub){
         res.status(401).send({
             message: 'Authentication failed'
         });
+    }else{
+        res.json(jobs);
     }    
-
-    res.json(jobs);
+    
 });
 
 app.post('/register',function(req,res){
