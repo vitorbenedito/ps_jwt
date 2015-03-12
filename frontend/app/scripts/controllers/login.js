@@ -13,4 +13,8 @@ angular.module('psJwtApp').controller('LoginCtrl', function ($scope, alert, auth
         	});
     };
 
+    $scope.google = function(){
+    	auth.googleAuth().then();
+    }
+
  });

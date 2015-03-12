@@ -3,10 +3,18 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var User = require('./models/User.js');
 var jwt = require('jwt-simple');
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
+var request = require('request');
 
 var app = express();
 
 app.use(bodyParser.json());
+app.use(passport.initialize());
+
+passport.serializeUser(function(user,done){
+    done(null,user.id);
+});
 
 app.use(function(req,res,next){
     res.header('Access-Control-Allow-Origin','*');
@@ -15,6 +23,68 @@ app.use(function(req,res,next){
     
     next();
 });
+
+var strategyOptions = {
+    usernameField: 'email'
+};
+
+var loginStrategy = new LocalStrategy(strategyOptions, function(email,password,done){
+
+    var searchUser = {
+        email: email
+    };
+
+    User.findOne(searchUser, function(err,user){
+        if(err) return done(err);
+
+        if(!user) return done(null,false,{
+            message: 'Wrong email/password'
+        });                
+        
+        user.comparePasswords(password, function(err, isMatch){
+
+            if(err) return done(err);
+            
+            if(!isMatch){ 
+                return done(null,false,{                
+                    message: 'Wrong email/password'
+                });    
+            }            
+
+            return done(null, user);
+                
+        });
+    });
+});
+
+var registerStrategy = new LocalStrategy(strategyOptions, function(email,passwor,done){
+
+    var searchUser = {
+        email: email
+    };
+
+    User.findOne(searchUser, function(err,user){
+        if(err) return done(err);
+
+        if(user) return done(null,false,{
+            message: 'Email already existis'
+        }); 
+
+        var newUser = new User({
+            email: email,
+            password: password
+        });        
+        
+        newUser.save(function(err){
+            createSendToken(newUser, res);
+        });   
+    });
+
+
+});
+
+passport.use('local-register',registerStrategy);
+passport.use('local-login',loginStrategy);
 
 var jobs = [
     'Cook',
@@ -45,48 +115,62 @@ app.get('/jobs', function(req,res){
     
 });
 
-app.post('/register',function(req,res){
-    var user = req.body;
-    
-    var newUser = new User({
-        email: user.email,
-        password: user.password
-    });        
-    
-    newUser.save(function(err){
-        createSendToken(newUser, res);
-    });        
-    
+app.post('/register',passport.authenticate('local-register'),function(req,res){    
+    createSendToken(req.user, res);        
 });
 
-app.post('/login', function(req,res){
+app.post('/login',passport.authenticate('local-login'),function(req,res){    
 
-    req.user = req.body;
+    createSendToken(req.user, res);    
 
-    var searchUser = {
-        email: req.user.email
-    };
+});
 
-    User.findOne(searchUser, function(err,user){
-        if(err) throw err;
+app.post('/auth/google', function(req,res){
 
-        if(!user){
-            return res.status(401).send({message: 'Wrong email/password'});
-        };
+    var url = 'https://accounts.google.com/o/oauth2/token';
+    var apiUrl = 'https://www.googleapis.com/plus/v1/people/me/openIdConnect';
+
+    var params = {
+        client_id: req.body.clientId,
+        redirect_uri: req.body.redirectUri,
+        code: req.body.code,
+        grant_type: 'authorization_code',
+        client_secret: 'E64yJVDuS5fcVTL8gQpR_P29'
+    }    
+
+    request.post(url, {
+        json: true, 
+        form: params
+    },function(err,response,token){
         
-        user.comparePasswords(req.user.password, function(err, isMatch){
-            if(err) throw err;
+        var accessToken = token.access_token;
+        var headers = {
+            Authorization: 'Bearer ' + accessToken
+        }
 
-            if(!isMatch){
-                return res.status(401).send({message: 'Wrong email/password'});
-            }
-
-            createSendToken(user, res);
+        request.get({
+            url: apiUrl, 
+            headers: headers, 
+            json: true
+        }, function(err, response, profile){
+            User.findOne({
+                googleId: profile.sub
+            }, function(err, foundUser){
                 
-        });
-    });
+                if(foundUser) return createSendToken(foundUser, res);
+                console.log('teste');
+                var newUser = new User();
+                newUser.googleId = profile.sub;
+                newUser.displayName = profile.name;
+                newUser.save(function(err){
+                    if(err) return next(err);
+                    createSendToken(newUser, res);
+                })
+            })
+        })
 
-});
+    })
+})
 
 function createSendToken(user,res){
     var payload = {
