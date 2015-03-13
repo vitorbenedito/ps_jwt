@@ -6,6 +6,7 @@ var jwt = require('jwt-simple');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var request = require('request');
+var moment = require('moment');
 
 var app = express();
 
@@ -17,7 +18,8 @@ passport.serializeUser(function(user,done){
 });
 
 app.use(function(req,res,next){
-    res.header('Access-Control-Allow-Origin','*');
+    res.header('Access-Control-Allow-Origin','http://localhost:9000');
+    res.header('Access-Control-Allow-Credentials', true);
     res.header('Access-Control-Allow-Methods','GET,PUT,POST,DELETE');
     res.header('Access-Control-Allow-Headers','Content-Type, Authorization');
     
@@ -58,28 +60,28 @@ var loginStrategy = new LocalStrategy(strategyOptions, function(email,password,d
 });
 
 var registerStrategy = new LocalStrategy(strategyOptions, function(email,password,done){
-
+    
     var searchUser = {
         email: email
     };
 
-    User.findOne(searchUser, function(err,user){
-        if(err) return done(err);
+    User.findOne(searchUser, function (err, user) {
+        if (err) return done(err);
+        
+        if (user) return done(null, false, {
+            message: 'email already exists'
+        });
 
-        if(user) return done(null,false,{
-            message: 'Email already existis'
-        }); 
 
         var newUser = new User({
             email: email,
             password: password
-        });        
-        
-        newUser.save(function(err){
-            createSendToken(newUser, res);
-        });   
-    });
+        });
 
+        newUser.save(function (err) {
+            done(null, newUser);
+        })
+    });
 
 });
 
@@ -174,7 +176,8 @@ app.post('/auth/google', function(req,res){
 
 function createSendToken(user,res){
     var payload = {
-        sub: user.id
+        sub: user.id,
+        exp: moment().add(10, 'days').unix()
     };
     
     var token = jwt.encode(payload,"shhh..");
