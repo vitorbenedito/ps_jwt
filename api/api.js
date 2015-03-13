@@ -57,7 +57,7 @@ var loginStrategy = new LocalStrategy(strategyOptions, function(email,password,d
     });
 });
 
-var registerStrategy = new LocalStrategy(strategyOptions, function(email,passwor,done){
+var registerStrategy = new LocalStrategy(strategyOptions, function(email,password,done){
 
     var searchUser = {
         email: email

@@ -22,10 +22,10 @@
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
 
-    <!-- Add your site or application content here -->    
-      
+    <!-- Add your site or application content here -->
+
     <div ng-include="'views/header.html'"></div>
-      
+
     <div class="container" ng-cloak>
 
         <div class="row">
@@ -33,14 +33,14 @@
             <div ui-view></div>
           </div>
         </div>
-        
+
         <div ng-include="'views/alert.html'"></div>
-    
+
     </div>
 
     <div class="footer">
       <div class="container">
-        
+
       </div>
     </div>
 
@@ -63,6 +63,7 @@
     <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <script src="bower_components/angular-animate/angular-animate.js"></script>
     <script src="bower_components/angular-ui-router/release/angular-ui-router.js"></script>
+    <script src="bower_components/satellizer/satellizer.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
