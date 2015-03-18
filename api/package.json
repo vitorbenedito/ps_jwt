@@ -15,6 +15,7 @@
     "jwt-simple": "^0.2.0",
     "mongoose": "^3.8.23",
     "passport": "^0.2.1",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "querystring": "^0.2.0"
   }
 }

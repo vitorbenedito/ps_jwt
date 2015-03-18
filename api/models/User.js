@@ -5,7 +5,8 @@ var UserSchema = new mongoose.Schema({
     email: String,
     password: String,
     googleId: String,
-    displayName: String
+    displayName: String,
+    facebookId: String
 });
 
 UserSchema.methods.toJSON = function(){
